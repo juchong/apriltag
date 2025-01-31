@@ -34,6 +34,7 @@ either expressed or implied, of the Regents of The University of Michigan.
 #include "common/image_u8.h"
 #include "common/pnm.h"
 #include "common/math_util.h"
+#include "common/debug_print.h"
 
 // least common multiple of 64 (sandy bridge cache line) and 24 (stride
 // needed for RGB in 8-wide vector processing)
@@ -41,15 +42,34 @@ either expressed or implied, of the Regents of The University of Michigan.
 
 image_u8_t *image_u8_create_stride(unsigned int width, unsigned int height, unsigned int stride)
 {
-    uint8_t *buf = calloc(height*stride, sizeof(uint8_t));
+    debug_print("ℹ️ image_u8_create_stride() - Allocating with width=%u, height=%u, stride=%u\n", width, height, stride);
 
-    // const initializer
+    uint8_t *buf = calloc(height * stride, sizeof(uint8_t));
+    if (buf == NULL)
+    {
+        debug_print("🔥 ERROR: image_u8_create_stride() - Failed to allocate %u bytes for buf\n", height * stride);
+        return NULL;
+    }
+
+    // ✅ Create a temporary struct on the stack
     image_u8_t tmp = { .width = width, .height = height, .stride = stride, .buf = buf };
 
-    image_u8_t *im = calloc(1, sizeof(image_u8_t));
+    // ✅ Allocate memory for the final struct
+    image_u8_t *im = malloc(sizeof(image_u8_t));
+    if (im == NULL)
+    {
+        debug_print("🔥 ERROR: image_u8_create_stride() - Failed to allocate image_u8_t struct\n");
+        free(buf);
+        return NULL;
+    }
+
+    // ✅ Copy initialized struct (including `const` values)
     memcpy(im, &tmp, sizeof(image_u8_t));
+
+    debug_print("✅ SUCCESS: image_u8_create_stride() allocated %u bytes at %p\n", height * stride, (void*)im->buf);
     return im;
 }
+
 
 image_u8_t *image_u8_create(unsigned int width, unsigned int height)
 {
@@ -63,8 +83,17 @@ image_u8_t *image_u8_create_alignment(unsigned int width, unsigned int height, u
     if ((stride % alignment) != 0)
         stride += alignment - (stride % alignment);
 
-    return image_u8_create_stride(width, height, stride);
+    image_u8_t *im = image_u8_create_stride(width, height, stride);
+
+    if (im == NULL)
+    {
+        debug_print("🔥 ERROR: image_u8_create_alignment() failed to allocate memory!\n");
+        return NULL;
+    }
+
+    return im;
 }
+
 
 image_u8_t *image_u8_copy(const image_u8_t *in)
 {

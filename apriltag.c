@@ -1472,3 +1472,23 @@ image_u8_t *apriltag_to_image(apriltag_family_t *fam, uint32_t idx)
     }
     return im;
 }
+
+// Simple function to test library loading
+int apriltag_test_function()
+{
+    return 42;  // Arbitrary test value
+}
+
+// Expose function to be callable from Unity
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+__attribute__((visibility("default"))) int apriltag_test_function_wrapper()
+{
+    return apriltag_test_function();
+}
+
+#if defined(__cplusplus)
+}
+#endif
