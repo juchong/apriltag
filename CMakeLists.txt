@@ -46,6 +46,12 @@ set(APRILTAG_SRCS apriltag.c apriltag_pose.c apriltag_quad_thresh.c)
 file(GLOB TAG_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tag*.c)
 add_library(${PROJECT_NAME} ${APRILTAG_SRCS} ${COMMON_SRC} ${TAG_FILES})
 
+# Find the log library
+find_library(log-lib log)
+
+# Link the log library to your target
+target_link_libraries(${PROJECT_NAME} PUBLIC ${log-lib})
+
 if (MSVC)
     add_compile_definitions("_CRT_SECURE_NO_WARNINGS")
 else()

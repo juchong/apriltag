@@ -26,16 +26,22 @@ either expressed or implied, of the Regents of The University of Michigan.
 */
 #pragma once
 
-#if !defined(NDEBUG) || defined(_DEBUG)
-
-#include <string.h>
 #include <stdio.h>
-#define DEBUG 1
+#include <stdarg.h>
+#include <android/log.h>
 
-#else
-#define DEBUG 0
+// Define a tag for log identification in Logcat
+#ifndef LOG_TAG
+#define LOG_TAG "AprilTagAndroid"
 #endif
 
+// If ANDROID_DEBUG is defined, enable debug printing; otherwise no-op.
+#ifdef ANDROID_DEBUG
 #define debug_print(fmt, ...) \
-        do { if (DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, strrchr("/"__FILE__,'/')+1, \
-                                __LINE__, __func__, ##__VA_ARGS__); fflush(stderr);} while (0)
+    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s:%d: %s(): " fmt, \
+                        strrchr("/" __FILE__, '/') ? strrchr("/" __FILE__, '/') + 1 : __FILE__, \
+                        __LINE__, __func__, ##__VA_ARGS__)
+#else
+#define debug_print(fmt, ...) \
+    do { /* no-op */ } while (0)
+#endif
